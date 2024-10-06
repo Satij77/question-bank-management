@@ -1,82 +1,66 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const apiUrl = 'http://localhost:5000/api'; // Update with the correct API URL
+const apiUrl = 'https://be-sdn.onrender.com/api/questions'; // Replace with your actual API URL
 
-// Create Axios instance with HTTPS agent
-const axiosInstance = axios.create({
-  httpsAgent: new require('https').Agent({ rejectUnauthorized: false })
+// Get all questions for a quiz
+router.get('/quizzes/:quizId', async (req, res) => {
+    try {
+        const response = await axios.get(`${apiUrl}/quizzes/${req.params.quizId}`);
+        res.render('questions/list', { questions: response.data, quizId: req.params.quizId });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
-// List all questions
-router.get('/', async (req, res) => {
-  try {
-    const response = await axiosInstance.get(`${apiUrl}/questions`);
-    res.render('questions/list', { questions: response.data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+// Create question
+router.get('/quizzes/:quizId/create', (req, res) => {
+    res.render('questions/create', { quizId: req.params.quizId });
 });
 
-// View question details by ID
-router.get('/:questionId', async (req, res) => {
-  try {
-    const response = await axiosInstance.get(`${apiUrl}/questions/${req.params.questionId}`);
-    res.render('questions/details', { question: response.data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+// Handle question creation
+router.post('/quizzes/:quizId', async (req, res) => {
+    try {
+        await axios.post(`${apiUrl}/quizzes/${req.params.quizId}/question`, req.body);
+        res.redirect(`/questions/quizzes/${req.params.quizId}`);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
-// Show create question form
-router.get('/new', (req, res) => {
-  res.render('questions/create');
+// Edit question
+router.get('/edit/:questionId', async (req, res) => {
+    try {
+        const response = await axios.get(`${apiUrl}/${req.params.questionId}`);
+        res.render('questions/edit', { question: response.data });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
-// Create new question
-router.post('/', async (req, res) => {
-  try {
-    await axiosInstance.post(`${apiUrl}/questions`, req.body);
-    res.redirect('/questions');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+// Handle question update
+router.put('/edit/:questionId', async (req, res) => {
+    try {
+        await axios.put(`${apiUrl}/${req.params.questionId}`, req.body);
+        res.redirect(`/questions/${req.params.questionId}`);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
-// Show edit question form
-router.get('/:questionId/edit', async (req, res) => {
-  try {
-    const response = await axiosInstance.get(`${apiUrl}/questions/${req.params.questionId}`);
-    res.render('questions/edit', { question: response.data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Update question by ID
-router.put('/:questionId', async (req, res) => {
-  try {
-    await axiosInstance.put(`${apiUrl}/questions/${req.params.questionId}`, req.body);
-    res.redirect('/questions');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Delete question by ID
+// Delete question
 router.delete('/:questionId', async (req, res) => {
-  try {
-    await axiosInstance.delete(`${apiUrl}/questions/${req.params.questionId}`);
-    res.redirect('/questions');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+    try {
+        await axios.delete(`${apiUrl}/${req.params.questionId}`);
+        res.redirect('/questions');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
 module.exports = router;

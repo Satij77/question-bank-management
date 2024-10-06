@@ -1,82 +1,84 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const apiUrl = 'http://localhost:5000/api'; // Update with the correct API URL
+const apiUrl = 'http://be-sdn.onrender.com/api/quizzes'; // Updated to remove trailing slash
 
-// Create Axios instance with HTTPS agent
-const axiosInstance = axios.create({
-  httpsAgent: new require('https').Agent({ rejectUnauthorized: false })
-});
-
-// List all quizzes
+// Get all quizzes
 router.get('/', async (req, res) => {
-  try {
-    const response = await axiosInstance.get(`${apiUrl}/quizzes`);
-    res.render('quiz/list', { quizzes: response.data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+    try {
+        const response = await axios.get(apiUrl);
+        res.render('quiz/list', { quizzes: response.data });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
-// View quiz details by ID
-router.get('/:quizId', async (req, res) => {
-  try {
-    const response = await axiosInstance.get(`${apiUrl}/quizzes/${req.params.quizId}`);
-    res.render('quiz/details', { quiz: response.data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+// Create quiz
+router.get('/create', (req, res) => {
+    res.render('quiz/create');
 });
 
-// Show create quiz form
-router.get('/new', (req, res) => {
-  res.render('quiz/create');
-});
-
-// Create new quiz
+// Handle quiz creation
 router.post('/', async (req, res) => {
-  try {
-    await axiosInstance.post(`${apiUrl}/quizzes`, req.body);
-    res.redirect('/quizzes');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+    try {
+        await axios.post(apiUrl, req.body);
+        res.redirect('/quizzes');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
-// Show edit quiz form
-router.get('/:quizId/edit', async (req, res) => {
-  try {
-    const response = await axiosInstance.get(`${apiUrl}/quizzes/${req.params.quizId}`);
-    res.render('quiz/edit', { quiz: response.data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+// Edit quiz
+router.get('/edit/:quizId', async (req, res) => {
+    try {
+        const response = await axios.get(`${apiUrl}/${req.params.quizId}`); // Ensure quiz ID is valid
+        res.render('quiz/edit', { quiz: response.data });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
-// Update quiz by ID
+// Handle quiz update
 router.put('/:quizId', async (req, res) => {
-  try {
-    await axiosInstance.put(`${apiUrl}/quizzes/${req.params.quizId}`, req.body);
-    res.redirect('/quizzes');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+    try {
+        await axios.put(`${apiUrl}/${req.params.quizId}`, req.body);
+        res.redirect('/quizzes');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
-// Delete quiz by ID
+// Delete quiz
 router.delete('/:quizId', async (req, res) => {
-  try {
-    await axiosInstance.delete(`${apiUrl}/quizzes/${req.params.quizId}`);
-    res.redirect('/quizzes');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+    try {
+        await axios.delete(`${apiUrl}/${req.params.quizId}`);
+        res.redirect('/quizzes');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
 });
+
+// Quiz details route
+router.get('/:quizId', async (req, res) => {
+    try {
+        const response = await axios.get(`${apiUrl}/${req.params.quizId}`);
+        const quiz = response.data; // This includes the quiz data with questions
+
+        // Render the details page with quiz data and questions
+        res.render('quiz/details', { quiz: quiz });
+    } catch (err) {
+        console.error(err);
+        if (err.response && err.response.status === 404) {
+            return res.status(404).render('404', { message: 'Quiz not found' });
+        }
+        res.status(500).send('Internal Server Error');
+    }
+});
+
 
 module.exports = router;
