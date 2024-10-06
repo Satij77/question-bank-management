@@ -1,0 +1,32 @@
+<%- include('../partials/header.hbs') %>
+
+<h1>Quizzes</h1>
+<a href="/quizzes/create" class="btn btn-primary">Create New Quiz</a>
+<table class="table table-striped mt-4">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% quizzes.forEach(quiz => { %>
+            <tr>
+                <td><%= quiz._id %></td>
+                <td><%= quiz.title %></td>
+                <td><%= quiz.description %></td>
+                <td>
+                    <a href="/quizzes/<%= quiz._id %>" class="btn btn-info">View</a>
+                    <a href="/quizzes/edit/<%= quiz._id %>" class="btn btn-warning">Edit</a>
+                    <form action="/quizzes/<%= quiz._id %>?_method=DELETE" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        <% }) %>
+    </tbody>
+</table>
+
+<%- include('../partials/footer.hbs') %>
